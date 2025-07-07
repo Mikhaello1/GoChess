@@ -1,5 +1,5 @@
 import { Pieces } from "../entitites/Pieces/Pieces";
-import { getState, useAppSelector } from "../store/store";
+import { getState } from "../store/store";
 import type { ICell } from "../types/ICell";
 import type { IField } from "../types/IField";
 import type { IPiece } from "../types/IPiece";
@@ -196,7 +196,7 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
 
 
             if (!piece.color) {
-                const whitePiecesWithoutKing = Pieces.filter((pc) => pc.color === 1 || piece.name !== "king");
+                const whitePiecesWithoutKing = Pieces.filter((pc) => pc.color === 1 && pc.name !== "king");
                 console.log(whitePiecesWithoutKing);
                 const whitePiecesCells: ICell[] = [];
                 field.forEach((row) => {
@@ -208,7 +208,7 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
                 const whitePossibleMoves: ICell[] = [];
                 whitePiecesCells
                     .map((cell) => {
-                        return getPossibleMoves(cell, field, turn);
+                        return getPossibleMoves(cell, field, !turn);
                     })
                     .forEach((row) => {
                         row.forEach((el) => {
@@ -237,11 +237,12 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
                         }
                     }
                 }
+                return result.filter(cell => cell.id !== whitePossibleMoves.find(wcl => wcl.id === cell.id)?.id)
             }
 
             if (piece.color) {
-                const blackPiecesWithoutKing = Pieces.filter((pc) => pc.color === 0 || piece.name !== "king");
-                console.log(blackPiecesWithoutKing)
+                const blackPiecesWithoutKing = Pieces.filter((pc) => pc.color === 0 && pc.name !== "king");
+                
                 const blackPiecesCells: ICell[] = [];
                 field.forEach((row) => {
                     row.forEach((cell) => {
@@ -252,15 +253,18 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
                 const blackPossibleMoves: ICell[] = [];
                 blackPiecesCells
                     .map((cell) => {
-                        return getPossibleMoves(cell, field, turn);
+                        
+                        return getPossibleMoves(cell, field, !turn);
                     })
                     .forEach((row) => {
+                        // console.log(row)
                         row.forEach((el) => {
+                            // console.log(el)
                             blackPossibleMoves.push(el);
                         });
                     });
                 
-
+                    
                 if (whiteShortCastle) {
                     const piecef1 = Pieces.find((pc) => pc.id === field[7][5].pieceId);
                     const pieceg1 = Pieces.find((pc) => pc.id === field[7][6].pieceId);
@@ -281,6 +285,7 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
                         }
                     }
                 }
+                return result.filter(cell => cell.id !== blackPossibleMoves.find(bcl => bcl.id === cell.id)?.id)
             }
         }
     }

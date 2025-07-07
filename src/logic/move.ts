@@ -13,8 +13,6 @@ export const move = (
 ): IField => {
     let newField = JSON.parse(JSON.stringify(field));
 
-    // const {whiteShortCastle, whiteLongCastle, blackLongCastle, blackShortCastle} = useAppSelector(state => state.castleSlice)
-
     const piece = Pieces.find((pc) => pc.id === currentCell?.pieceId);
 
     if (currentCell && piece) {
