@@ -3,9 +3,11 @@ import { getState } from "../store/store";
 import type { ICell } from "../types/ICell";
 import type { IField } from "../types/IField";
 import type { IPiece } from "../types/IPiece";
-import { getPieceFromCell } from "./getPieceFromCell";
+import { getPieceFromCell } from "./helpers/getPieceFromCell";
+import { isChecked } from "./isChecked";
+import { isSavesFromCheck } from "./isSavesFromCheck";
 
-export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICell[] => {
+export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean, isCheckingForCheck = false): ICell[] => {
     let result = [];
 
     const piece = getPieceFromCell(cell);
@@ -14,6 +16,17 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
     const { whiteShortCastle, whiteLongCastle, blackLongCastle, blackShortCastle } = state.castleSlice;
 
     if (piece && !!piece.color === turn) {
+        const kingPieceId = Pieces.find((pc) => pc.color === piece.color && pc.name === "king")?.id;
+        let kingCell: ICell | null = null;
+
+        field.forEach((row) => {
+            row.forEach((cl) => {
+                if (cl.pieceId === kingPieceId) kingCell = { ...cl };
+            });
+        });
+        if (!kingCell) {
+            throw new Error("King piece not found in the field");
+        }
         if (piece.name === "pawn") {
             const direction = piece.color === 1 ? -1 : 1;
             const startPosition = piece.color === 1 ? 6 : 1;
@@ -148,6 +161,7 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
         }
 
         if (piece.name === "king") {
+            const preResult: ICell[] = [];
             const directions = [
                 { di: 1, dj: 0 },
                 { di: -1, dj: 0 },
@@ -190,103 +204,128 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean): ICe
             //                 enemyPossibleMoves.push(el);
             //             });
             //         });
-                
+
             // const shortCastleCoordinates = piece.color === 0 ? [[0, 5], [0, 6]] : [[7, 5], [7, 6]];
-            // const longCastleCoordinates = piece.color === 0 ? [[0, 3], [0, 2]] : [[7, 3], [7, 2]] 
+            // const longCastleCoordinates = piece.color === 0 ? [[0, 3], [0, 2], [0, 1]] : [[7, 3], [7, 2], [7, 1]];
+            // if (!piece.color) {
+            //     if (blackShortCastle) {
+            //         const piecef8 = Pieces.find((pc) => pc.id === field[shortCastleCoordinates[0][0]][shortCastleCoordinates[0][1]].pieceId);
+            //         const pieceg8 = Pieces.find((pc) => pc.id === field[shortCastleCoordinates[1][0]][shortCastleCoordinates[1][1]].pieceId);
 
+            //         if (!piecef8 && !pieceg8) {
+            //             if (!enemyPossibleMoves.find((cell) => cell.id === field[0][5].id) && !enemyPossibleMoves.find((cell) => cell.id === field[0][6].id)) {
+            //                 result.push(field[0][6]);
+            //             }
+            //         }
+            //     }
+            //     if (blackLongCastle) {
+            //         const pieced1 = Pieces.find((pc) => pc.id === field[0][3].pieceId);
+            //         const piecec1 = Pieces.find((pc) => pc.id === field[0][2].pieceId);
+            //         const pieceb1 = Pieces.find((pc) => pc.id === field[0][1].pieceId);
 
-            if (!piece.color) {
-                const whitePiecesWithoutKing = Pieces.filter((pc) => pc.color === 1 && pc.name !== "king");
-                console.log(whitePiecesWithoutKing);
-                const whitePiecesCells: ICell[] = [];
-                field.forEach((row) => {
-                    row.forEach((cell) => {
-                        if (whitePiecesWithoutKing.find((pc) => pc.id === cell.pieceId)) whitePiecesCells.push(cell);
-                    });
-                });
-
-                const whitePossibleMoves: ICell[] = [];
-                whitePiecesCells
-                    .map((cell) => {
-                        return getPossibleMoves(cell, field, !turn);
-                    })
-                    .forEach((row) => {
-                        row.forEach((el) => {
-                            whitePossibleMoves.push(el);
+            //         if (!pieced1 && !piecec1 && !pieceb1) {
+            //             if (!whitePossibleMoves.find((cell) => cell.id === field[0][3].id) && !whitePossibleMoves.find((cell) => cell.id === field[0][2].id)) {
+            //                 result.push(field[0][2]);
+            //             }
+            //         }
+            //     }
+            // }
+            if (!isChecked(piece.color, kingCell, field)) {
+                if (!piece.color) {
+                    const whitePiecesWithoutKing = Pieces.filter((pc) => pc.color === 1 && pc.name !== "king");
+                    const whitePiecesCells: ICell[] = [];
+                    field.forEach((row) => {
+                        row.forEach((cell) => {
+                            if (whitePiecesWithoutKing.find((pc) => pc.id === cell.pieceId)) whitePiecesCells.push(cell);
                         });
                     });
-                
 
-                if (blackShortCastle) {
-                    const piecef8 = Pieces.find((pc) => pc.id === field[0][5].pieceId);
-                    const pieceg8 = Pieces.find((pc) => pc.id === field[0][6].pieceId);
+                    const whitePossibleMoves: ICell[] = [];
+                    whitePiecesCells
+                        .map((cell) => {
+                            return getPossibleMoves(cell, field, !turn);
+                        })
+                        .forEach((row) => {
+                            row.forEach((el) => {
+                                whitePossibleMoves.push(el);
+                            });
+                        });
 
-                    if (!piecef8 && !pieceg8) {
-                        if (!whitePossibleMoves.find((cell) => cell.id === field[0][5].id) && !whitePossibleMoves.find((cell) => cell.id === field[0][6].id)) {
-                            result.push(field[0][6]);
+                    if (blackShortCastle) {
+                        const piecef8 = Pieces.find((pc) => pc.id === field[0][5].pieceId);
+                        const pieceg8 = Pieces.find((pc) => pc.id === field[0][6].pieceId);
+
+                        if (!piecef8 && !pieceg8) {
+                            if (!whitePossibleMoves.find((cell) => cell.id === field[0][5].id) && !whitePossibleMoves.find((cell) => cell.id === field[0][6].id)) {
+                                preResult.push(field[0][6]);
+                            }
                         }
                     }
-                }
-                if (blackLongCastle) {
-                    const pieced1 = Pieces.find((pc) => pc.id === field[0][3].pieceId);
-                    const piecec1 = Pieces.find((pc) => pc.id === field[0][2].pieceId);
+                    if (blackLongCastle) {
+                        const pieced1 = Pieces.find((pc) => pc.id === field[0][3].pieceId);
+                        const piecec1 = Pieces.find((pc) => pc.id === field[0][2].pieceId);
+                        const pieceb1 = Pieces.find((pc) => pc.id === field[0][1].pieceId);
 
-                    if (!pieced1 && !piecec1) {
-                        if (!whitePossibleMoves.find((cell) => cell.id === field[0][3].id) && !whitePossibleMoves.find((cell) => cell.id === field[0][2].id)) {
-                            result.push(field[0][2]);
+                        if (!pieced1 && !piecec1 && !pieceb1) {
+                            if (!whitePossibleMoves.find((cell) => cell.id === field[0][3].id) && !whitePossibleMoves.find((cell) => cell.id === field[0][2].id)) {
+                                preResult.push(field[0][2]);
+                            }
                         }
                     }
+                    result = [...result, ...preResult.filter((cell) => cell.id !== whitePossibleMoves.find((wcl) => wcl.id === cell.id)?.id)];
                 }
-                return result.filter(cell => cell.id !== whitePossibleMoves.find(wcl => wcl.id === cell.id)?.id)
-            }
 
-            if (piece.color) {
-                const blackPiecesWithoutKing = Pieces.filter((pc) => pc.color === 0 && pc.name !== "king");
-                
-                const blackPiecesCells: ICell[] = [];
-                field.forEach((row) => {
-                    row.forEach((cell) => {
-                        if (blackPiecesWithoutKing.find((pc) => pc.id === cell.pieceId)) blackPiecesCells.push(cell);
-                    });
-                });
+                if (piece.color) {
+                    const blackPiecesWithoutKing = Pieces.filter((pc) => pc.color === 0 && pc.name !== "king");
 
-                const blackPossibleMoves: ICell[] = [];
-                blackPiecesCells
-                    .map((cell) => {
-                        
-                        return getPossibleMoves(cell, field, !turn);
-                    })
-                    .forEach((row) => {
-                        // console.log(row)
-                        row.forEach((el) => {
-                            // console.log(el)
-                            blackPossibleMoves.push(el);
+                    const blackPiecesCells: ICell[] = [];
+                    field.forEach((row) => {
+                        row.forEach((cell) => {
+                            if (blackPiecesWithoutKing.find((pc) => pc.id === cell.pieceId)) blackPiecesCells.push(cell);
                         });
                     });
-                
-                    
-                if (whiteShortCastle) {
-                    const piecef1 = Pieces.find((pc) => pc.id === field[7][5].pieceId);
-                    const pieceg1 = Pieces.find((pc) => pc.id === field[7][6].pieceId);
 
-                    if (!piecef1 && !pieceg1) {
-                        if (!blackPossibleMoves.find((cell) => cell.id === field[7][5].id) && !blackPossibleMoves.find((cell) => cell.id === field[7][6].id)) {
-                            result.push(field[7][6]);
+                    const blackPossibleMoves: ICell[] = [];
+                    blackPiecesCells
+                        .map((cell) => {
+                            return getPossibleMoves(cell, field, !turn);
+                        })
+                        .forEach((row) => {
+                            row.forEach((el) => {
+                                blackPossibleMoves.push(el);
+                            });
+                        });
+
+                    if (whiteShortCastle) {
+                        const piecef1 = Pieces.find((pc) => pc.id === field[7][5].pieceId);
+                        const pieceg1 = Pieces.find((pc) => pc.id === field[7][6].pieceId);
+
+                        if (!piecef1 && !pieceg1) {
+                            if (!blackPossibleMoves.find((cell) => cell.id === field[7][5].id) && !blackPossibleMoves.find((cell) => cell.id === field[7][6].id)) {
+                                preResult.push(field[7][6]);
+                            }
                         }
                     }
-                }
-                if (whiteLongCastle) {
-                    const pieced1 = Pieces.find((pc) => pc.id === field[7][3].pieceId);
-                    const piecec1 = Pieces.find((pc) => pc.id === field[7][2].pieceId);
+                    if (whiteLongCastle) {
+                        const pieced1 = Pieces.find((pc) => pc.id === field[7][3].pieceId);
+                        const piecec1 = Pieces.find((pc) => pc.id === field[7][2].pieceId);
+                        const pieceb1 = Pieces.find((pc) => pc.id === field[7][1].pieceId);
 
-                    if (!pieced1 && !piecec1) {
-                        if (!blackPossibleMoves.find((cell) => cell.id === field[7][3].id) && !blackPossibleMoves.find((cell) => cell.id === field[7][2].id)) {
-                            result.push(field[7][6]);
+                        if (!pieced1 && !piecec1 && !pieceb1) {
+                            if (!blackPossibleMoves.find((cell) => cell.id === field[7][3].id) && !blackPossibleMoves.find((cell) => cell.id === field[7][2].id)) {
+                                preResult.push(field[7][6]);
+                            }
                         }
                     }
+                    result = [...result, ...preResult.filter((cell) => cell.id !== blackPossibleMoves.find((bcl) => bcl.id === cell.id)?.id)];
                 }
-                return result.filter(cell => cell.id !== blackPossibleMoves.find(bcl => bcl.id === cell.id)?.id)
             }
+        }
+
+        if (!isCheckingForCheck) {  
+            
+                return result.filter((cellToMove) => isSavesFromCheck(piece.color, field, cell, cellToMove));
+            
         }
     }
 
