@@ -1,0 +1,3 @@
+# Игнорировать папки node_modules в client и server
+client/node_modules/
+server/node_modules/

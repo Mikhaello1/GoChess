@@ -42,18 +42,15 @@ wss.on("connection", (ws) => {
             players.clear();
         }
         if (msg.type === "move") {
-            const { gameId, field, turn, enemy } = msg.payload;
+            const { gameId, field, turn, enemyId } = msg.payload;
             const game = games.get(gameId);
-            game.id = gameId;
             game.field = field;
             game.turn = turn;
-            game.players = players;
-            console.log("получили мув");
             wss.clients.forEach((client) => {
                 client.send(JSON.stringify({
                     type: "move",
                     payload: {
-                        playerId: enemy,
+                        playerId: enemyId,
                         field,
                         turn,
                     },
