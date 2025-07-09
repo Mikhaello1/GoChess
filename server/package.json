@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "main.js",
+  "dependencies": {
+    "concurrently": "^9.2.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.8.3",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.3"
+  },
+  "scripts": {
+    "dev": "concurrently \"tsc --watch\" \"nodemon main.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
+}

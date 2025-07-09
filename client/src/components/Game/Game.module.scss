@@ -1,0 +1,10 @@
+.Game{
+    display: grid;
+    grid-template-columns: repeat(8, 1fr); /* 8 колонок */
+    grid-template-rows: repeat(8, 1fr);  
+    gap: 0;
+    width: 800px;
+    height: 800px;
+    border: 1px solid black;
+    position: relative;
+}
