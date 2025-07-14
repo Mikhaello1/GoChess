@@ -1,22 +1,36 @@
-
-
-.Cell{
+.Cell {
     width: 100px;
     height: 100px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.xCoord{
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    padding-right: 3px;
-}
-.yCoord{
-    position: absolute;
-    left: 0;
-    top: 0;
-    padding-left: 3px;
+
+    .xCoord {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        padding-right: 3px;
+    }
+
+    .yCoord {
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding-left: 3px;
+    }
+
+    .xCoordBl{
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding-right: 3px;
+    }
+
+    .yCoordBl {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        padding-right: 3px;
+    }
 }

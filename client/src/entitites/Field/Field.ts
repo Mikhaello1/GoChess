@@ -10,7 +10,7 @@ const createField = (): ICell[][] => {
                 id: i + j * 8, 
                 x: i,      
                 y: j,      
-                color: (i + j) % 2, 
+                color: (i + j + 1) % 2, 
             });
         }
     }

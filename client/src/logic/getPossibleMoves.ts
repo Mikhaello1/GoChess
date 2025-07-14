@@ -13,7 +13,7 @@ export const getPossibleMoves = (cell: ICell, field: IField, turn: boolean, isCh
     const piece = getPieceFromCell(cell);
 
     const state = getState();
-    const { whiteShortCastle, whiteLongCastle, blackLongCastle, blackShortCastle } = state.castleSlice;
+    const { whiteShortCastle, whiteLongCastle, blackLongCastle, blackShortCastle } = state.castle;
 
     if (piece && !!piece.color === turn) {
         const kingPieceId = Pieces.find((pc) => pc.color === piece.color && pc.name === "king")?.id;

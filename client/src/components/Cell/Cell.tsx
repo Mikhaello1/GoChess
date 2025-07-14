@@ -4,6 +4,7 @@ import { convertToLetter } from "../../coordinates";
 import type { ICell } from "../../types/ICell";
 import {Piece} from "../Piece/Piece";
 import { Pieces } from "../../entitites/Pieces/Pieces";
+import { useAppSelector } from "../../store/store";
 
 interface CellProps extends ICell {
     onClick: () => void;
@@ -13,6 +14,8 @@ interface CellProps extends ICell {
 const Cell: React.FC<CellProps> = ({ color, x, y, pieceId, onClick, highlight }) => {
     
     const pc = Pieces.find(pc => pc.id === pieceId);
+
+    const playerColor = useAppSelector(state => state.player.color)
 
 
     return (
